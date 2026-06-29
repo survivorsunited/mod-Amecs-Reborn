@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "de.siphalor.amecs.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_21",
   "client": [
     "ControlsListWidgetKeyBindingEntryAccessor",
     "MixinEntryListWidget",
@@ -12,9 +12,7 @@
     "MixinKeybindsScreen",
     "MixinKeyboard",
     "MixinMinecraftClient",
-    "MixinMouse",
-    "compat.MixinControllingKeybindsScreen",
-    "compat.MixinControllingKeyEntry"
+    "MixinMouse"
   ],
   "injectors": {
     "defaultRequire": 1

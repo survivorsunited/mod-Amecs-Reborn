@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.11-SNAPSHOT"
+    id("fabric-loom") version "1.14.1"
     id("maven-publish")
 }
 
@@ -42,6 +42,16 @@ loom {
     accessWidenerPath = rootProject.file("src/main/resources/amecs.accesswidener")
 }
 
+sourceSets {
+    main {
+        java {
+            // The Controlling compat mixins target the pre-1.21.11 Controlling keybind screen API.
+            // Keep the 1.21.11 branch buildable by excluding them until that integration is ported.
+            exclude("de/siphalor/amecs/mixin/compat/**")
+        }
+    }
+}
+
 
 dependencies {
     //to change the versions see the gradle.properties file
@@ -52,8 +62,6 @@ dependencies {
     include(implementation("com.moulberry:mixinconstraints:${(property("mcon_version"))}")!!)
     include(modImplementation("wtf.cheeze:platformlanguageloader-fabric:${property("pll_version")}")!!)
 
-    modImplementation("maven.modrinth:controlling:${property("controlling_version")}")
-    modImplementation("maven.modrinth:searchables:${property("searchables_version")}")
     modImplementation("com.terraformersmc:modmenu:${property("modmenu_version")}")
 }
 
@@ -80,17 +88,9 @@ java {
 }
 
 
-//sourceSets {
-//    create("testmod") {
-//        compileClasspath += sourceSets["main"].compileClasspath
-//        runtimeClasspath += sourceSets["main"].runtimeClasspath
-//    }
-//}
-
 tasks.named<Jar>("jar") {
 
     from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
     }
 }
-

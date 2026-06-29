@@ -25,14 +25,22 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: build active branch target
-        run: ./gradlew --no-daemon clean build --stacktrace
+        run: |
+          set +e
+          ./gradlew --no-daemon clean build --stacktrace --console=plain 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          echo "Gradle exit code: ${status}"
+          echo "---- Last 250 lines of build.log ----"
+          tail -n 250 build.log || true
+          exit ${status}
 
-      - name: capture build artifacts
+      - name: capture build artifacts and logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Artifacts
           path: |
+            build.log
             build/libs/*.jar
             versions/**/build/libs/*.jar
           if-no-files-found: ignore

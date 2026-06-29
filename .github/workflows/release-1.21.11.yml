@@ -4,27 +4,10 @@ on:
   push:
     branches:
       - "1.21.11"
-    tags:
-      - "v*-mc1.21.11"
   pull_request:
     branches:
       - "1.21.11"
   workflow_dispatch:
-    inputs:
-      publish_release:
-        description: "Publish a GitHub release from this run"
-        type: boolean
-        required: true
-        default: false
-      release_tag:
-        description: "Release tag to create/use, for example v2.0.2-mc1.21.11. Leave blank to derive it from gradle.properties."
-        type: string
-        required: false
-      prerelease:
-        description: "Mark the GitHub release as a prerelease"
-        type: boolean
-        required: true
-        default: false
 
 permissions:
   contents: write
@@ -116,36 +99,22 @@ jobs:
           path: release/*
           if-no-files-found: error
 
-      - name: Publish GitHub release
-        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish_release)
+      - name: Publish branch release
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/1.21.11') || github.event_name == 'workflow_dispatch' }}
         env:
           GH_TOKEN: ${{ github.token }}
-          INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
-          INPUT_PRERELEASE: ${{ inputs.prerelease }}
         run: |
           set -euo pipefail
 
           mod_version="$(grep '^mod_version' gradle.properties | cut -d= -f2- | xargs)"
           minecraft_version="$(grep '^minecraft_version' versions/1.21.11/gradle.properties | cut -d= -f2- | xargs)"
-
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            tag="${GITHUB_REF_NAME}"
-          elif [[ -n "${INPUT_RELEASE_TAG}" ]]; then
-            tag="${INPUT_RELEASE_TAG}"
-          else
-            tag="v${mod_version}-mc${minecraft_version}"
-          fi
-
-          if [[ ! "${tag}" =~ ^v.*-mc1\.21\.11$ ]]; then
-            echo "Release tag must match v*-mc1.21.11, got '${tag}'" >&2
-            exit 1
-          fi
-
+          release_tag="branch-1.21.11"
           release_title="Amecs Reborn ${mod_version} for Minecraft ${minecraft_version}"
+
           cat > release/RELEASE_NOTES.md <<EOF
           # ${release_title}
 
-          Built from branch/tag \`${GITHUB_REF_NAME}\` at commit \`${GITHUB_SHA}\`.
+          Built automatically from the \`1.21.11\` branch at commit \`${GITHUB_SHA}\`.
 
           ## Validation
 
@@ -159,13 +128,13 @@ jobs:
           Controlling compatibility is intentionally disabled on this branch until it is ported to the 1.21.11 Controlling key event API.
           EOF
 
-          args=("$tag" release/*.jar release/SHA256SUMS.txt --title "$release_title" --notes-file release/RELEASE_NOTES.md --target "$GITHUB_SHA")
-          if [[ "${INPUT_PRERELEASE:-false}" == "true" ]]; then
-            args+=(--prerelease)
-          fi
+          gh release delete "$release_tag" --yes --cleanup-tag >/dev/null 2>&1 || true
+          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${release_tag}" >/dev/null 2>&1 || true
 
-          if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" release/*.jar release/SHA256SUMS.txt --clobber
-          else
-            gh release create "${args[@]}"
-          fi
+          gh release create "$release_tag" \
+            release/*.jar \
+            release/SHA256SUMS.txt \
+            --title "$release_title" \
+            --notes-file release/RELEASE_NOTES.md \
+            --target "$GITHUB_SHA" \
+            --latest

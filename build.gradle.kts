@@ -42,13 +42,11 @@ loom {
     accessWidenerPath = rootProject.file("src/main/resources/amecs.accesswidener")
 }
 
-sourceSets {
-    main {
-        java {
-            // The Controlling compat mixins target the pre-1.21.11 Controlling keybind screen API.
-            // Keep the 1.21.11 branch buildable by excluding them until that integration is ported.
-            exclude("de/siphalor/amecs/mixin/compat/**")
-        }
+sourceSets.named("main") {
+    java {
+        // The Controlling compat mixins target the pre-1.21.11 Controlling keybind screen API.
+        // Keep the 1.21.11 branch buildable by excluding them until that integration is ported.
+        exclude("de/siphalor/amecs/mixin/compat/**")
     }
 }
 

@@ -23,12 +23,16 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A {@link net.minecraft.client.option.KeyBinding} base class to be used when you want to define modifiers keys as default
  * @author Siphalor
  */
 @Environment(EnvType.CLIENT)
 public class AmecsKeyBinding extends KeyBinding {
+	private static final Map<String, KeyBinding.Category> CATEGORY_CACHE = new HashMap<>();
 	private final KeyModifiers defaultModifiers;
 
 	/**
@@ -59,12 +63,40 @@ public class AmecsKeyBinding extends KeyBinding {
 	 * @param defaultModifiers the default modifiers
 	 */
 	public AmecsKeyBinding(String id, InputUtil.Type type, int code, String category, KeyModifiers defaultModifiers) {
-		super(id, type, code, category);
+		super(id, type, code, categoryFromString(category));
 		if (defaultModifiers == null || defaultModifiers == KeyModifiers.NO_MODIFIERS) {
 			defaultModifiers = new KeyModifiers(); // the modifiable version of: KeyModifiers.NO_MODIFIERS
 		}
 		this.defaultModifiers = defaultModifiers;
 		((IKeyBinding) this).amecs$getKeyModifiers().copyModifiers(this.defaultModifiers);
+	}
+
+	private static KeyBinding.Category categoryFromString(String category) {
+		return switch (category) {
+			case "key.categories.movement" -> KeyBinding.Category.MOVEMENT;
+			case "key.categories.misc" -> KeyBinding.Category.MISC;
+			case "key.categories.multiplayer" -> KeyBinding.Category.MULTIPLAYER;
+			case "key.categories.gameplay" -> KeyBinding.Category.GAMEPLAY;
+			case "key.categories.inventory" -> KeyBinding.Category.INVENTORY;
+			case "key.categories.creative" -> KeyBinding.Category.CREATIVE;
+			case "key.categories.spectator" -> KeyBinding.Category.SPECTATOR;
+			case "key.categories.debug" -> KeyBinding.Category.DEBUG;
+			case "key.categories.ui" -> KeyBinding.Category.MISC;
+			case "amecs.key.categories.skin_layers" -> CATEGORY_CACHE.computeIfAbsent(category, ignored -> KeyBinding.Category.create(Identifier.of("amecs", "skin_layers")));
+			default -> CATEGORY_CACHE.computeIfAbsent(category, AmecsKeyBinding::createCategory);
+		};
+	}
+
+	private static KeyBinding.Category createCategory(String category) {
+		Identifier id;
+		if (category.contains(":")) {
+			id = Identifier.of(category);
+		} else if (category.startsWith("key.categories.")) {
+			id = Identifier.ofVanilla(category.substring("key.categories.".length()));
+		} else {
+			id = Identifier.of("amecs", category.replace('.', '_').replace(' ', '_').toLowerCase());
+		}
+		return KeyBinding.Category.create(id);
 	}
 
 	@Override

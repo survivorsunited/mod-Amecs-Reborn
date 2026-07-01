@@ -29,8 +29,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.KeybindsScreen;
+import net.minecraft.client.input.MouseInput;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.jetbrains.annotations.NotNull;
@@ -150,7 +152,7 @@ public abstract class MixinMouse implements IMouse {
 	private boolean handleScrollInKeybindsScreen(CallbackInfo callbackInfo, InputUtil.Key primaryKeyCode) {
 		assert client.currentScreen != null;
 		KeyBinding focusedBinding = ((KeybindsScreen) client.currentScreen).selectedKeyBinding;
-		if (focusedBinding != null) {
+		if (focusedBinding != null && primaryKeyCode != null) {
 			if (!focusedBinding.isUnbound()) {
 				KeyModifiers keyModifiers = ((IKeyBinding) focusedBinding).amecs$getKeyModifiers();
 				keyModifiers.set(KeyModifier.fromKey(((IKeyBinding) focusedBinding).amecs$getBoundKey()), true);
@@ -158,7 +160,7 @@ public abstract class MixinMouse implements IMouse {
 			// This is a bit hacky, but the easiest way out
 			// If the selected binding != null, the mouse x and y will always be ignored - so no need to convert them
 			// The key code that InputUtil.MOUSE.createFromCode chooses is always one bigger than the input
-			client.currentScreen.mouseClicked(-1, -1, primaryKeyCode.getCode());
+			client.currentScreen.mouseClicked(new Click(-1, -1, new MouseInput(primaryKeyCode.getCode(), 0)), false);
 			// if we do we cancel the method because we do not want the current screen to get the scroll event
 			callbackInfo.cancel();
 			return true;

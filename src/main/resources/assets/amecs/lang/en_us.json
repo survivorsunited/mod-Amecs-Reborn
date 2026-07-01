@@ -1,5 +1,6 @@
 {
   "amecs.key.categories.skin_layers": "Amecs Skin Layers",
+  "key.category.amecs.skin_layers": "Amecs Skin Layers",
   "key.amecs.toggle_auto_jump": "Toggle Auto Jump",
   "key.amecs.toggle_cape": "Toggle Cape",
   "key.amecs.toggle_hat": "Toggle Hat",
@@ -28,5 +29,5 @@
   "amecs.meta.options.skinKeybinds": "Skin Layer Keybinds",
   "amecs.meta.options.autoJumpKeybind": "Auto Jump Keybind",
   "amecs.meta.options.escapeKeybind": "Alternate Escape Keybind",
-  "amecs.meta.options.resetNotice": "The following options require a game restart to take effect once changed"
+  "amecs.meta.options.resetNotice": "The following options require a game restart to effect once changed"
 }

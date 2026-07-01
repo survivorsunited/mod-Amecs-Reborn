@@ -63,7 +63,7 @@ public class MixinKeyBindingEntry implements IKeyBindingEntry {
 
 	@Inject(method = "<init>", at = @At("RETURN"))
 	public void onConstructed(ControlsListWidget parent, KeyBinding keyBinding, Text text, CallbackInfo callbackInfo) {
-		String descriptionKey = binding.getTranslationKey() + DESCRIPTION_SUFFIX;
+		String descriptionKey = binding.getId() + DESCRIPTION_SUFFIX;
 		if (I18n.hasTranslation(descriptionKey)) {
 			String[] lines = StringUtils.split(I18n.translate(descriptionKey), '\n');
 			description = new ArrayList<>(lines.length);

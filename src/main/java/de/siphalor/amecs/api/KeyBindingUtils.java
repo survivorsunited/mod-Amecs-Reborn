@@ -147,7 +147,7 @@ public class KeyBindingUtils {
 	 * @return whether the keyBinding was removed. It is not removed if it was not contained
 	 */
 	public static boolean unregisterKeyBinding(KeyBinding keyBinding) {
-		return unregisterKeyBinding(keyBinding.getTranslationKey());
+		return unregisterKeyBinding(keyBinding.getId());
 	}
 
 	/**

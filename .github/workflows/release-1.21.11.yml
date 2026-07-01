@@ -39,11 +39,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build
+      - name: Build active 1.21.11 source node
         run: |
           set +e
           chmod +x ./gradlew
-          ./gradlew --no-daemon clean build --stacktrace --console=plain 2>&1 | tee build.log
+          ./gradlew --no-daemon :1.21.5:clean :1.21.5:build --stacktrace --console=plain 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
           echo "Gradle exit code: ${status}"
           echo "---- Last 250 lines of build.log ----"
@@ -63,10 +63,10 @@ jobs:
           set -euo pipefail
           mkdir -p release
 
-          mapfile -t jars < <(find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' | sort)
+          mapfile -t jars < <(find versions/1.21.5/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' | sort)
           if [ "${#jars[@]}" -eq 0 ]; then
-            echo "No release jar found in build/libs" >&2
-            find build/libs -maxdepth 1 -type f -print >&2 || true
+            echo "No release jar found in versions/1.21.5/build/libs" >&2
+            find versions/1.21.5/build/libs -maxdepth 1 -type f -print >&2 || true
             exit 1
           fi
 
@@ -122,7 +122,7 @@ jobs:
           set -euo pipefail
 
           mod_version="$(grep '^mod_version' gradle.properties | cut -d= -f2- | xargs)"
-          minecraft_version="$(grep '^minecraft_version' versions/1.21.11/gradle.properties | cut -d= -f2- | xargs)"
+          minecraft_version="$(grep '^minecraft_version' versions/1.21.5/gradle.properties | cut -d= -f2- | xargs)"
           release_tag="branch-1.21.11"
           release_title="Amecs Reborn ${mod_version} for Minecraft ${minecraft_version}"
 
@@ -133,14 +133,14 @@ jobs:
 
           ## Validation
 
-          - Ran \`./gradlew --no-daemon clean build\`.
+          - Ran \`./gradlew --no-daemon :1.21.5:clean :1.21.5:build\`.
           - Checked \`fabric.mod.json\` declares Minecraft \`${minecraft_version}\`.
           - Checked unported Controlling compat mixins are not enabled in the 1.21.11 release jar.
           - SHA256 checksums are attached in \`SHA256SUMS.txt\`.
 
           ## Notes
 
-          Controlling compatibility is intentionally disabled on this branch until it is ported to the 1.21.11 Controlling key event API.
+          Controlling compatibility and the controls search widget are intentionally disabled on this branch until they are ported to the 1.21.11 APIs.
           EOF
 
           gh release delete "$release_tag" --yes --cleanup-tag >/dev/null 2>&1 || true

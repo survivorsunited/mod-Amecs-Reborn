@@ -6,6 +6,7 @@ import de.siphalor.amecs.impl.KeyBindingManager;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.option.KeybindsScreen;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
@@ -27,7 +28,8 @@ public abstract class MixinKeyboard {
 			at = @At(value = "FIELD", target = "Lnet/minecraft/client/Keyboard;debugCrashStartTime:J")
 	)
 	public int modifyPressedKey(int key, long window, int key_, int scancode) {
-		if (Amecs.ESCAPE_KEYBINDING != null && Amecs.ESCAPE_KEYBINDING.matchesKey(key, scancode)) {
+		KeyInput input = new KeyInput(key, scancode, 0);
+		if (Amecs.ESCAPE_KEYBINDING != null && Amecs.ESCAPE_KEYBINDING.matchesKey(input)) {
 			return GLFW.GLFW_KEY_ESCAPE;
 		}
 		return key;
@@ -35,12 +37,13 @@ public abstract class MixinKeyboard {
 
 	@Inject(method = "onKey", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
 	private void onKeyPriority(long window, int key, int scanCode, int action, int modifiers, CallbackInfo callbackInfo) {
+		InputUtil.Key inputKey = InputUtil.fromKeyCode(new KeyInput(key, scanCode, modifiers));
 		if (action == 1) {
-			if (KeyBindingManager.onKeyPressedPriority(InputUtil.fromKeyCode(key, scanCode))) {
+			if (KeyBindingManager.onKeyPressedPriority(inputKey)) {
 				callbackInfo.cancel();
 			}
 		} else if (action == 0) {
-			if (KeyBindingManager.onKeyReleasedPriority(InputUtil.fromKeyCode(key, scanCode))) {
+			if (KeyBindingManager.onKeyReleasedPriority(inputKey)) {
 				callbackInfo.cancel();
 			}
 		}
@@ -54,6 +57,6 @@ public abstract class MixinKeyboard {
 			screen.lastKeyCodeUpdateTime = Util.getMeasuringTimeMs();
 		}
 
-		Amecs.CURRENT_MODIFIERS.set(KeyModifier.fromKeyCode(InputUtil.fromKeyCode(key, scanCode).getCode()), action != 0);
+		Amecs.CURRENT_MODIFIERS.set(KeyModifier.fromKeyCode(InputUtil.fromKeyCode(new KeyInput(key, scanCode, modifiers)).getCode()), action != 0);
 	}
 }

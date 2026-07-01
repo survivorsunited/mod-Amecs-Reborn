@@ -69,7 +69,7 @@ public class KeyModifierOptions {
 			KeyModifiers modifiers;
 			for (KeyBinding binding : bindingsWithChangedModifiers) {
 				modifiers = KeyBindingUtils.getBoundModifiers(binding);
-				writer.println(KEY_MODIFIERS_PREFIX + binding.getTranslationKey() + ":" + modifiers.serializeValue());
+				writer.println(KEY_MODIFIERS_PREFIX + binding.getId() + ":" + modifiers.serializeValue());
 			}
 		} catch (FileNotFoundException e) {
 			Amecs.LOGGER.error("Failed to save Amecs modifiers to options file", e);

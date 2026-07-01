@@ -27,6 +27,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.Window;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.*;
@@ -43,7 +44,8 @@ public class KeyBindingManager {
 	// split it in two maps because it is ways faster to only stream the map with the objects we need
 	// rather than streaming all and throwing out a bunch every time
 	public static final Map<InputUtil.Key, List<KeyBinding>> keysById = new HashMap<>();
-	public static final Map<InputUtil.Key, List<KeyBinding>> priorityKeysById = new HashMap<>();private static final List<KeyBinding> pressedKeyBindings = new ArrayList<>(10);
+	public static final Map<InputUtil.Key, List<KeyBinding>> priorityKeysById = new HashMap<>();
+	private static final List<KeyBinding> pressedKeyBindings = new ArrayList<>(10);
 
 	private KeyBindingManager() {}
 	/**
@@ -134,10 +136,10 @@ public class KeyBindingManager {
 	}
 
 	public static void updatePressedStates() {
-		long windowHandle = MinecraftClient.getInstance().getWindow().getHandle();
+		Window window = MinecraftClient.getInstance().getWindow();
 		forEachKeyBinding(keyBinding -> {
 			InputUtil.Key key = ((IKeyBinding) keyBinding).amecs$getBoundKey();
-			boolean pressed = !keyBinding.isUnbound() && key.getCategory() == InputUtil.Type.KEYSYM && InputUtil.isKeyPressed(windowHandle, key.getCode());
+			boolean pressed = !keyBinding.isUnbound() && key.getCategory() == InputUtil.Type.KEYSYM && InputUtil.isKeyPressed(window, key.getCode());
 			setKeyBindingPressed(keyBinding, pressed);
 		});
 	}

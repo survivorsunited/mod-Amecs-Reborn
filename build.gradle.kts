@@ -47,6 +47,11 @@ sourceSets.named("main") {
         // The Controlling compat mixins target the pre-1.21.11 Controlling keybind screen API.
         // Keep the 1.21.11 branch buildable by excluding them until that integration is ported.
         exclude("de/siphalor/amecs/mixin/compat/**")
+
+        // The search bar widget targets the old ControlsListWidget/Input event APIs.
+        // Disable it on the 1.21.11 branch until it is ported properly.
+        exclude("de/siphalor/amecs/gui/SearchFieldControlsListWidget.java")
+        exclude("de/siphalor/amecs/mixin/MixinEntryListWidget.java")
     }
 }
 

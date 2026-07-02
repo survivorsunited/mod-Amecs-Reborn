@@ -27,22 +27,22 @@ public abstract class MixinKeyboard {
 			ordinal = 0,
 			at = @At(value = "FIELD", target = "Lnet/minecraft/client/Keyboard;debugCrashStartTime:J")
 	)
-	public int modifyPressedKey(int key, long window, int key_, int scancode) {
-		KeyInput input = new KeyInput(key, scancode, 0);
-		if (Amecs.ESCAPE_KEYBINDING != null && Amecs.ESCAPE_KEYBINDING.matchesKey(input)) {
+	public int modifyPressedKey(int key, long window, int action, KeyInput input) {
+		KeyInput adjustedInput = new KeyInput(key, input.scancode(), input.modifiers());
+		if (Amecs.ESCAPE_KEYBINDING != null && Amecs.ESCAPE_KEYBINDING.matchesKey(adjustedInput)) {
 			return GLFW.GLFW_KEY_ESCAPE;
 		}
 		return key;
 	}
 
 	@Inject(method = "onKey", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
-	private void onKeyPriority(long window, int key, int scanCode, int action, int modifiers, CallbackInfo callbackInfo) {
-		InputUtil.Key inputKey = InputUtil.fromKeyCode(new KeyInput(key, scanCode, modifiers));
-		if (action == 1) {
+	private void onKeyPriority(long window, int action, KeyInput input, CallbackInfo callbackInfo) {
+		InputUtil.Key inputKey = InputUtil.fromKeyCode(input);
+		if (action == InputUtil.GLFW_PRESS) {
 			if (KeyBindingManager.onKeyPressedPriority(inputKey)) {
 				callbackInfo.cancel();
 			}
-		} else if (action == 0) {
+		} else if (action == InputUtil.GLFW_RELEASE) {
 			if (KeyBindingManager.onKeyReleasedPriority(inputKey)) {
 				callbackInfo.cancel();
 			}
@@ -50,13 +50,13 @@ public abstract class MixinKeyboard {
 	}
 
 	@Inject(method = "onKey", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Keyboard;debugCrashStartTime:J", ordinal = 0))
-	private void onKey(long window, int key, int scanCode, int action, int modifiers, CallbackInfo callbackInfo) {
+	private void onKey(long window, int action, KeyInput input, CallbackInfo callbackInfo) {
 		// Key released
-		if (action == 0 && MinecraftClient.getInstance().currentScreen instanceof KeybindsScreen screen) {
+		if (action == InputUtil.GLFW_RELEASE && MinecraftClient.getInstance().currentScreen instanceof KeybindsScreen screen) {
             screen.selectedKeyBinding = null;
 			screen.lastKeyCodeUpdateTime = Util.getMeasuringTimeMs();
 		}
 
-		Amecs.CURRENT_MODIFIERS.set(KeyModifier.fromKeyCode(InputUtil.fromKeyCode(new KeyInput(key, scanCode, modifiers)).getCode()), action != 0);
+		Amecs.CURRENT_MODIFIERS.set(KeyModifier.fromKeyCode(InputUtil.fromKeyCode(input).getCode()), action != InputUtil.GLFW_RELEASE);
 	}
 }

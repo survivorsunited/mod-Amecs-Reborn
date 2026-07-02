@@ -48,13 +48,10 @@ sourceSets.named("main") {
         // Keep the 1.21.11 branch buildable by excluding them until that integration is ported.
         exclude("de/siphalor/amecs/mixin/compat/**")
 
-        // The search bar and keybinds screen widgets target the old ControlsListWidget/Input event APIs.
-        // Disable them on the 1.21.11 branch until they are ported properly.
+        // The search bar widget targets the old ControlsListWidget/Input event APIs.
+        // Disable it on the 1.21.11 branch until it is ported properly.
         exclude("de/siphalor/amecs/gui/SearchFieldControlsListWidget.java")
         exclude("de/siphalor/amecs/mixin/MixinEntryListWidget.java")
-        exclude("de/siphalor/amecs/mixin/MixinKeybindsScreen.java")
-        exclude("de/siphalor/amecs/mixin/MixinKeyBindingEntry.java")
-        exclude("de/siphalor/amecs/mixin/ControlsListWidgetKeyBindingEntryAccessor.java")
     }
 }
 

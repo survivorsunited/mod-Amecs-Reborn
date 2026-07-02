@@ -70,6 +70,9 @@ public abstract class MixinKeyBinding implements IKeyBinding {
 	@Unique
 	private final KeyModifiers keyModifiers = new KeyModifiers();
 
+	@Unique
+	private boolean amecs$registered;
+
 	@Override
 	public InputUtil.Key amecs$getBoundKey() {
 		return boundKey;
@@ -99,9 +102,12 @@ public abstract class MixinKeyBinding implements IKeyBinding {
 		return keyModifiers;
 	}
 
-	@Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/util/InputUtil$Type;ILnet/minecraft/client/option/KeyBinding$Category;I)V", at = @At("RETURN"))
-	private void onConstructed(String id, InputUtil.Type type, int defaultCode, KeyBinding.Category category, int sortOrder, CallbackInfo callbackInfo) {
-		KeyBindingManager.register((KeyBinding) (Object) this);
+	@Inject(method = "<init>", at = @At("RETURN"))
+	private void onConstructed(CallbackInfo callbackInfo) {
+		if (!amecs$registered) {
+			amecs$registered = true;
+			KeyBindingManager.register((KeyBinding) (Object) this);
+		}
 	}
 
 	@Inject(method = "getBoundKeyLocalizedText", at = @At("TAIL"), cancellable = true)

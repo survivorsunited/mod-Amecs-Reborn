@@ -16,6 +16,7 @@
 
 package de.siphalor.amecs.mixin;
 
+import java.util.List;
 import java.util.Map;
 
 import org.spongepowered.asm.mixin.*;
@@ -36,6 +37,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
@@ -62,7 +65,7 @@ public abstract class MixinKeyBinding implements IKeyBinding {
 	@Shadow
 	@Final
 	@Mutable
-	private static Map<InputUtil.Key, KeyBinding> KEY_TO_BINDINGS = NOPMap.nopMap();
+	private static Map<InputUtil.Key, List<KeyBinding>> KEY_TO_BINDINGS = NOPMap.nopMap();
 
 	@Unique
 	private final KeyModifiers keyModifiers = new KeyModifiers();
@@ -96,8 +99,8 @@ public abstract class MixinKeyBinding implements IKeyBinding {
 		return keyModifiers;
 	}
 
-	@Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/util/InputUtil$Type;ILjava/lang/String;)V", at = @At("RETURN"))
-	private void onConstructed(String id, InputUtil.Type type, int defaultCode, String category, CallbackInfo callbackInfo) {
+	@Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/util/InputUtil$Type;ILnet/minecraft/client/option/KeyBinding$Category;I)V", at = @At("RETURN"))
+	private void onConstructed(String id, InputUtil.Type type, int defaultCode, KeyBinding.Category category, int sortOrder, CallbackInfo callbackInfo) {
 		KeyBindingManager.register((KeyBinding) (Object) this);
 	}
 
@@ -124,14 +127,14 @@ public abstract class MixinKeyBinding implements IKeyBinding {
 	}
 
 	@Inject(method = "matchesKey", at = @At("RETURN"), cancellable = true)
-	public void matchesKey(int keyCode, int scanCode, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+	public void matchesKey(KeyInput keyInput, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
 		if (!keyModifiers.isUnset() && !keyModifiers.equals(KeyModifiers.getCurrentlyPressed())) {
 			callbackInfoReturnable.setReturnValue(false);
 		}
 	}
 
 	@Inject(method = "matchesMouse", at = @At("RETURN"), cancellable = true)
-	public void matchesMouse(int mouse, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+	public void matchesMouse(Click click, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
 		if (!keyModifiers.isUnset() && !keyModifiers.equals(KeyModifiers.getCurrentlyPressed())) {
 			callbackInfoReturnable.setReturnValue(false);
 		}

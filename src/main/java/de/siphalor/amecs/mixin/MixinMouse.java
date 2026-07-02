@@ -65,8 +65,8 @@ public abstract class MixinMouse implements IMouse {
 	}
 
 	@Inject(method = "onMouseButton", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 0), cancellable = true)
-	private void onMouseButtonPriority(long window, int type, int state, int int_3, CallbackInfo callbackInfo) {
-		if (state == 1 && KeyBindingManager.onKeyPressedPriority(InputUtil.Type.MOUSE.createFromCode(type))) {
+	private void onMouseButtonPriority(long window, MouseInput input, int action, CallbackInfo callbackInfo) {
+		if (action == InputUtil.GLFW_PRESS && KeyBindingManager.onKeyPressedPriority(InputUtil.Type.MOUSE.createFromCode(input.button()))) {
 			callbackInfo.cancel();
 		}
 	}

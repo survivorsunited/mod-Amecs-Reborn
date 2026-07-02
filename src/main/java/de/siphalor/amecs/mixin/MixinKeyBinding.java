@@ -16,7 +16,6 @@
 
 package de.siphalor.amecs.mixin;
 
-import java.util.List;
 import java.util.Map;
 
 import org.spongepowered.asm.mixin.*;
@@ -31,7 +30,6 @@ import de.siphalor.amecs.api.KeyModifier;
 import de.siphalor.amecs.api.KeyModifiers;
 import de.siphalor.amecs.impl.KeyBindingManager;
 import de.siphalor.amecs.impl.ModifierPrefixTextProvider;
-import de.siphalor.amecs.impl.NOPMap;
 import de.siphalor.amecs.impl.duck.IKeyBinding;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -59,13 +57,6 @@ public abstract class MixinKeyBinding implements IKeyBinding {
 	@Shadow
 	@Final
 	private static Map<String, KeyBinding> KEYS_BY_ID;
-
-	// set it to a NOPMap meaning everything done with this map is ignored. Because setting it to null would cause problems
-	// ... even if we remove the put in the KeyBinding constructor. Because maybe in the future this map is used elsewhere or a other mod uses it
-	@Shadow
-	@Final
-	@Mutable
-	private static Map<InputUtil.Key, List<KeyBinding>> KEY_TO_BINDINGS = NOPMap.nopMap();
 
 	@Unique
 	private final KeyModifiers keyModifiers = new KeyModifiers();

@@ -27,7 +27,7 @@ jobs:
       - name: build active 1.21.11 source node
         run: |
           set +e
-          ./gradlew --no-daemon :1.21.5:clean :1.21.5:build --stacktrace --console=plain 2>&1 | tee build.log
+          ./gradlew --no-daemon :1.21.11:clean :1.21.11:build --stacktrace --console=plain 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
           echo "Gradle exit code: ${status}"
           echo "---- Last 250 lines of build.log ----"
@@ -41,5 +41,5 @@ jobs:
           name: Artifacts
           path: |
             build.log
-            versions/1.21.5/build/libs/*.jar
+            versions/1.21.11/build/libs/*.jar
           if-no-files-found: ignore

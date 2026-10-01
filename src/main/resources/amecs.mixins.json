@@ -5,6 +5,7 @@
   "client": [
     "ControlsListWidgetKeyBindingEntryAccessor",
     "MixinGameOptions",
+    "MixinEntryListWidget",
     "MixinInputUtilType",
     "MixinKeyBinding",
     "MixinKeyBindingEntry",

@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"amecs-controls-tests","version":"1","environment":"client","entrypoints":{"client":["de.siphalor.amecs.test.ControlsTest"]},"depends":{"amecs-reborn":"*"}}

@@ -97,8 +97,8 @@ public class Amecs implements ClientModInitializer {
         }
         return switch (keyFilter) {
             case "" -> ((IKeyBindingEntry) entry).amecs$getKeyBinding().isUnbound();
-            case "%" ->
-                    ((ControlsListWidgetKeyBindingEntryAccessor) entry).getEditButton().getMessage().getStyle().getColor() == TextColor.fromFormatting(Formatting.RED);
+            case "%", "%%" ->
+                    java.util.Arrays.stream(net.minecraft.client.MinecraftClient.getInstance().options.allKeys).anyMatch(other -> other != ((IKeyBindingEntry) entry).amecs$getKeyBinding() && !other.isUnbound() && other.equals(((IKeyBindingEntry) entry).amecs$getKeyBinding()));
             default ->
                     StringUtils.containsIgnoreCase(((IKeyBindingEntry) entry).amecs$getKeyBinding().getBoundKeyLocalizedText().getString(), keyFilter);
         };
@@ -107,6 +107,9 @@ public class Amecs implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         MetaOptions.load(false);
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("controlling")) {
+            de.siphalor.amecs.compat.ControllingCompat.register();
+        }
         MetaOptions.registerCommand();
 
         registerAutoJumpKeybind();

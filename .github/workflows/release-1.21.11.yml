@@ -25,6 +25,7 @@ jobs:
   build:
     name: Build 1.21.11 jar
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -43,7 +44,7 @@ jobs:
         run: |
           set +e
           chmod +x ./gradlew
-          ./gradlew --no-daemon :1.21.5:clean :1.21.5:build --stacktrace --console=plain 2>&1 | tee build.log
+          ./gradlew --no-daemon :1.21.11:clean :1.21.11:build --stacktrace --console=plain 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
           echo "Gradle exit code: ${status}"
           echo "---- Last 250 lines of build.log ----"
@@ -58,15 +59,36 @@ jobs:
           path: build.log
           if-no-files-found: ignore
 
+      - name: Test controls without Controlling
+        run: |
+          xvfb-run -a ./gradlew --no-daemon :1.21.11:runControlsTest --console=plain 2>&1 | tee controls-vanilla.log
+          grep -q 'AMECS_CONTROLS_TEST_PASS controlling=false' controls-vanilla.log
+
+      - name: Test controls with Controlling
+        run: |
+          xvfb-run -a ./gradlew --no-daemon :1.21.11:runControlsTest -PwithControlling --console=plain 2>&1 | tee controls-controlling.log
+          grep -q 'AMECS_CONTROLS_TEST_PASS controlling=true' controls-controlling.log
+
+      - name: Upload client test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: controls-test-evidence
+          path: |
+            controls-*.log
+            versions/1.21.11/run-controls-test/screenshots/*.png
+            versions/1.21.11/run-controls-test/crash-reports/*
+          if-no-files-found: ignore
+
       - name: Prepare release files
         run: |
           set -euo pipefail
           mkdir -p release
 
-          mapfile -t jars < <(find versions/1.21.5/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' | sort)
+          mapfile -t jars < <(find versions/1.21.11/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' | sort)
           if [ "${#jars[@]}" -eq 0 ]; then
-            echo "No release jar found in versions/1.21.5/build/libs" >&2
-            find versions/1.21.5/build/libs -maxdepth 1 -type f -print >&2 || true
+            echo "No release jar found in versions/1.21.11/build/libs" >&2
+            find versions/1.21.11/build/libs -maxdepth 1 -type f -print >&2 || true
             exit 1
           fi
 
@@ -100,9 +122,12 @@ jobs:
 
                   mixins = json.loads(zf.read('amecs.mixins.json'))
                   client_mixins = mixins.get('client', [])
-                  blocked = [m for m in client_mixins if m.startswith('compat.')]
-                  if blocked:
-                      raise SystemExit(f'{jar}: unported Controlling compat mixins are still enabled: {blocked}')
+                  if 'MixinEntryListWidget' not in client_mixins:
+                      raise SystemExit(f'{jar}: controls search mixin missing')
+                  if 'de/siphalor/amecs/compat/ControllingCompat.class' not in zf.namelist():
+                      raise SystemExit(f'{jar}: Controlling event integration missing')
+                  if any('/test/' in name for name in zf.namelist()):
+                      raise SystemExit(f'{jar}: development test classes leaked into release')
 
           print(f'Validated {len(jars)} release jar(s) for Minecraft {expected_mc}')
           PY
@@ -122,8 +147,8 @@ jobs:
           set -euo pipefail
 
           mod_version="$(grep '^mod_version' gradle.properties | cut -d= -f2- | xargs)"
-          minecraft_version="$(grep '^minecraft_version' versions/1.21.5/gradle.properties | cut -d= -f2- | xargs)"
-          release_tag="branch-1.21.11"
+          minecraft_version="$(grep '^minecraft_version' versions/1.21.11/gradle.properties | cut -d= -f2- | xargs)"
+          release_tag="v${mod_version}-mc${minecraft_version}"
           release_title="Amecs Reborn ${mod_version} for Minecraft ${minecraft_version}"
 
           cat > release/RELEASE_NOTES.md <<EOF
@@ -133,18 +158,16 @@ jobs:
 
           ## Validation
 
-          - Ran \`./gradlew --no-daemon :1.21.5:clean :1.21.5:build\`.
+          - Ran \`./gradlew --no-daemon :1.21.11:clean :1.21.11:build\`.
           - Checked \`fabric.mod.json\` declares Minecraft \`${minecraft_version}\`.
-          - Checked unported Controlling compat mixins are not enabled in the 1.21.11 release jar.
+          - Verified controls search and optional Controlling integration are packaged.
           - SHA256 checksums are attached in \`SHA256SUMS.txt\`.
 
           ## Notes
 
-          Controlling compatibility and the controls search widget are intentionally disabled on this branch until they are ported to the 1.21.11 APIs.
+          Restores controls search and modifier bindings/reset support with Controlling 29.0.1 for Minecraft 1.21.11. Controlling and Searchables remain optional and are not bundled.
           EOF
 
-          gh release delete "$release_tag" --yes --cleanup-tag >/dev/null 2>&1 || true
-          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${release_tag}" >/dev/null 2>&1 || true
 
           gh release create "$release_tag" \
             release/*.jar \

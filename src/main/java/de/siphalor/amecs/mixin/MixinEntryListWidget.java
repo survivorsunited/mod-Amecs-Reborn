@@ -1,30 +1,25 @@
+/* Copyright 2020-2023 Siphalor. Licensed under Apache-2.0. */
 package de.siphalor.amecs.mixin;
 
 import de.siphalor.amecs.gui.SearchFieldControlsListWidget;
 import de.siphalor.amecs.impl.MetaOptions;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.option.ControlsListWidget;
-import net.minecraft.client.gui.widget.EntryListWidget;
+import net.minecraft.client.gui.screen.option.KeybindsScreen;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * @author Siphalor
- */
-@Environment(EnvType.CLIENT)
-@Mixin(EntryListWidget.class)
+@Mixin(ControlsListWidget.class)
 public abstract class MixinEntryListWidget {
-	@Shadow protected abstract int addEntry(EntryListWidget.Entry<?> entry);
-
-	@Inject(method = "<init>", at = @At("RETURN"))
-	public void onConstruct(MinecraftClient client, int width, int height, int y, int itemHeight, CallbackInfo ci) {
-		if (getClass().equals(ControlsListWidget.class) && MetaOptions.get().searchBar) {
-			this.addEntry((new SearchFieldControlsListWidget(client)));
-		}
-	}
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void amecs$addSearch(KeybindsScreen screen, MinecraftClient client, CallbackInfo ci) {
+        ControlsListWidget list = (ControlsListWidget) (Object) this;
+        if (list.getClass() == ControlsListWidget.class && MetaOptions.get().searchBar) {
+            var entries = new java.util.ArrayList<>(list.children());
+            entries.addFirst(new SearchFieldControlsListWidget(client, list));
+            list.replaceEntries(entries);
+        }
+    }
 }

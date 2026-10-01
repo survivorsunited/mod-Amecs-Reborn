@@ -76,8 +76,8 @@ public class MixinKeyBindingEntry implements IKeyBindingEntry {
 	}
 
 	@Inject(method = "render", at = @At("RETURN"))
-	public void onRendered(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta, CallbackInfo callbackInfo) {
-		if (description != null && mouseY >= y && mouseY < y + entryHeight && mouseX < editButton.getX()) {
+	public void onRendered(DrawContext context, int mouseX, int mouseY, boolean hovered, float delta, CallbackInfo callbackInfo) {
+		if (description != null && mouseY >= ((ControlsListWidget.Entry) (Object) this).getContentY() && mouseY < ((ControlsListWidget.Entry) (Object) this).getContentBottomEnd() && mouseX < editButton.getX()) {
 			context.drawTooltip(MinecraftClient.getInstance().textRenderer, description, mouseX, mouseY);
 		}
 	}

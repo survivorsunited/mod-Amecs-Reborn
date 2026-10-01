@@ -42,18 +42,8 @@ loom {
     accessWidenerPath = rootProject.file("src/main/resources/amecs.accesswidener")
 }
 
-sourceSets.named("main") {
-    java {
-        // The Controlling compat mixins target the pre-1.21.11 Controlling keybind screen API.
-        // Keep the 1.21.11 branch buildable by excluding them until that integration is ported.
-        exclude("de/siphalor/amecs/mixin/compat/**")
 
-        // The search bar widget targets the old ControlsListWidget/Input event APIs.
-        // Disable it on the 1.21.11 branch until it is ported properly.
-        exclude("de/siphalor/amecs/gui/SearchFieldControlsListWidget.java")
-        exclude("de/siphalor/amecs/mixin/MixinEntryListWidget.java")
-    }
-}
+
 
 
 dependencies {
@@ -66,6 +56,12 @@ dependencies {
     include(modImplementation("wtf.cheeze:platformlanguageloader-fabric:${property("pll_version")}")!!)
 
     modImplementation("com.terraformersmc:modmenu:${property("modmenu_version")}")
+    modCompileOnly("maven.modrinth:controlling:A6W4m3vi")
+    modCompileOnly("maven.modrinth:searchables:${property("searchables_version")}")
+    if (providers.gradleProperty("withControlling").isPresent) {
+        modRuntimeOnly("maven.modrinth:controlling:A6W4m3vi")
+        modRuntimeOnly("maven.modrinth:searchables:${property("searchables_version")}")
+    }
 }
 
 
@@ -95,5 +91,27 @@ tasks.named<Jar>("jar") {
 
     from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+
+
+val clientTest = sourceSets.create("clientTest") {
+    java.setSrcDirs(listOf(rootProject.file("src/clientTest/java")))
+    resources.setSrcDirs(listOf(rootProject.file("src/clientTest/resources")))
+    compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+    runtimeClasspath += sourceSets.main.get().output + sourceSets.main.get().runtimeClasspath
+}
+loom {
+    mods {
+        create("amecs-controls-tests") { sourceSet(clientTest) }
+    }
+    runs {
+        create("controlsTest") {
+            client()
+            source(clientTest)
+            runDir("run-controls-test")
+            vmArg("-Damecs.controlsTest=true")
+        }
     }
 }
